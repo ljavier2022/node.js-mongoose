@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import fetch from 'node-fetch';
-mongoose.connect('mongodb://127.0.0.1:27017/university-2023');
+mongoose.connect('mongodb://127.0.0.1:27017/university-2023-mongodb_v2');
+
+
 /*
 const advisorSchema = new mongoose.Schema({
       s_ID: {type:String},
@@ -28,6 +30,8 @@ async function getdata() {
 
 getdata();*/
 
+let API = 'http://localhost:8000';
+
 const advisorSchema = new mongoose.Schema({
    s_ID: {type:String},
    i_ID: {type:String}
@@ -37,22 +41,34 @@ building:{type:String},
 room_number:{type:String},
 capacity:{type:Number}
 });
+const programsSchema= new mongoose.Schema({
+  socialMediaHandles: {
+    type: Map,
+    of: String
+  }
+})
+
 const courseSchema = new mongoose.Schema({
   course_id:{type:String},
   title:{type:String},
   dept_name:{type:String},
-  credits:{type:Number}
+  credits:{type:Number},
+  programs:{type:String},
+  programs_1:[{type:String}]
   });
+  
   const departmentSchema = new mongoose.Schema({
     dept_name:{type:String},
     building:{type:String},
-    budget:{type:mongoose.Decimal128},
+    budget:{type:mongoose.Types.Decimal128},
     });
   const instructorSchema = new mongoose.Schema({
     ID:{type:String},
     name:{type:String},
     dept_name:{type:String},
-    salary:{type:mongoose.Decimal128}
+    salary:{type:mongoose.Types.Decimal128},
+    activo:Boolean,
+    phone_extensions:[String]
     });
 
     const prereqSchema = new mongoose.Schema({
@@ -63,7 +79,7 @@ const courseSchema = new mongoose.Schema({
       course_id:{type:String},
       sec_id:{type:String},
       semester:{type:String},
-      year:{type:mongoose.Decimal128},
+      year:{type:mongoose.Types.Decimal128},
       building:{type:String},
       room_number:{type:String},
       time_slot_id:{type:String}
@@ -72,21 +88,25 @@ const courseSchema = new mongoose.Schema({
         ID:{type:String},
         name:{type:String},
         dept_name:{type:String},
-        credits:{type:mongoose.Decimal128}
+        credits:{type:mongoose.Types.Decimal128},
+        picture:Buffer,
+        grades:[String]
         });
       const takesSchema = new mongoose.Schema({
         course_id:{type:String},
         sec_id:{type:String},
         semester:{type:String},
-        year:{type:mongoose.Decimal128},
-        grade:{type:String}
+        year:{type:mongoose.Types.Decimal128},
+        grade:{type:String},
+        update: {type: Date, default: Date.now}
         });
         const teachesSchema = new mongoose.Schema({
           ID:{type:String},
           course_id:{type:String},
           sec_id:{type:String},
           semester:{type:String},
-          year:{type:mongoose.Decimal128}
+          year: {type:mongoose.Types.Decimal128},
+          update: {type: Date, default: Date.now}
           });
 
 let advisor =new mongoose.model('advisor', advisorSchema);
@@ -100,11 +120,11 @@ let student =new mongoose.model('student', studentSchema);
 let takes =new mongoose.model('takes', takesSchema);
 let teaches =new mongoose.model('teaches', teachesSchema);
 
-let API = 'http://localhost:8000';
 
 async function getdata() {
 const res = await fetch(API);
 const data = await res.json();
+console.log(data.course);
 try {
  let inserted_a = await advisor.insertMany(data.advisor);
  let inserted_b = await classroom.insertMany(data.classroom);
@@ -116,7 +136,7 @@ try {
  let inserted_h = await student.insertMany(data.student);
  let inserted_i = await takes.insertMany(data.takes);
  let inserted_j = await teaches.insertMany(data.teaches);
- console.log(inserted_a);
+ //console.log(inserted_a);
  process.exit(0);
 } catch (e) {
  console.log('Some error');
@@ -124,5 +144,6 @@ try {
  process.exit(0);
 }
 }
+
 
 getdata();
